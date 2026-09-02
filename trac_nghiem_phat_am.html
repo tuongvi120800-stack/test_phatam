@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>發音測驗 — Trắc nghiệm phát âm</title>
+<style>
+  :root{
+    --navy:#1F4E78;
+    --cherry:#990011;
+    --bg:#FCF6F5;
+    --card:#FFFFFF;
+    --alt:#F2F6FA;
+    --text:#2b2b2b;
+    --muted:#767676;
+    --green:#1e7e34;
+    --red:#c0392b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:0 0 60px;
+    font-family: -apple-system, "Segoe UI", "PingFang TC", "Noto Sans TC", Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  header{
+    background:var(--navy); color:#fff;
+    padding:20px 16px 14px; text-align:center;
+    position:sticky; top:0; z-index:20;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+  }
+  header h1{ margin:0 0 4px; font-size:1.4rem; }
+  header .sub{ font-size:.9rem; opacity:.9; font-style:italic; }
+
+  nav.tabs{
+    display:flex; max-width:680px; margin:14px auto 0;
+    background:rgba(255,255,255,.12); border-radius:10px; overflow-x:auto;
+  }
+  nav.tabs button{
+    flex:1 0 auto; min-width:110px; background:transparent; border:none; color:#fff;
+    padding:10px 5px; font-size:.72rem; cursor:pointer; font-weight:600;
+    border-bottom:3px solid transparent; line-height:1.3;
+  }
+  nav.tabs button.active{
+    background:rgba(255,255,255,.18);
+    border-bottom:3px solid var(--cherry);
+  }
+
+  main{ max-width:680px; margin:0 auto; padding:16px; }
+  section.panel{ display:none; }
+  section.panel.active{ display:block; }
+
+  .intro{
+    background:var(--alt); border-radius:10px; padding:12px 14px;
+    font-size:.88rem; color:var(--muted); margin-bottom:16px; line-height:1.5;
+  }
+
+  .qcard{
+    background:var(--card); border-radius:14px; padding:16px;
+    margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+    border-left:4px solid var(--navy);
+  }
+  .qcard .qhead{
+    display:flex; align-items:center; gap:10px; margin-bottom:10px;
+  }
+  .qnum{
+    background:var(--cherry); color:#fff; width:26px; height:26px;
+    border-radius:50%; text-align:center; line-height:26px;
+    font-size:.82rem; font-weight:bold; flex-shrink:0;
+  }
+  .qword{ font-size:1.4rem; font-weight:700; color:var(--navy); }
+  .qword.long{ font-size:1.05rem; line-height:1.4; }
+  .qpy{ font-size:.78rem; font-style:italic; color:var(--muted); margin:2px 0 0 36px; }
+  .qvi{ font-size:.85rem; color:var(--cherry); font-style:italic; margin:2px 0 10px 36px; }
+  .playbtn{
+    background:var(--cherry); color:#fff; border:none; border-radius:20px;
+    padding:6px 14px; font-size:.82rem; cursor:pointer; white-space:nowrap;
+  }
+  .playbtn:active{ opacity:.7; }
+  .options{
+    display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  }
+  .options.single{ grid-template-columns:1fr; }
+  .opt{
+    border:1.5px solid #e0d8d8; border-radius:10px; padding:9px 10px;
+    font-size:1rem; cursor:pointer; text-align:center; background:#fff;
+    transition:all .15s;
+  }
+  .options.single .opt{ text-align:left; font-size:.92rem; }
+  .opt:active{ background:var(--alt); }
+  .opt.selected{ border-color:var(--navy); background:#EAF1F8; font-weight:700; }
+  .opt.correct{ border-color:var(--green); background:#e7f6ea; color:var(--green); font-weight:700; }
+  .opt.wrong{ border-color:var(--red); background:#fbeaea; color:var(--red); font-weight:700; }
+
+  .submitBar{
+    display:flex; gap:10px; margin-top:18px;
+  }
+  .submitBar button{
+    flex:1; padding:12px; border:none; border-radius:10px;
+    font-size:1rem; font-weight:700; cursor:pointer;
+  }
+  #submitTier1, #submitTier2, #submitTier4, #submitTier5{ background:var(--navy); color:#fff; }
+  .retryBtn{ background:#fff; color:var(--cherry); border:1.5px solid var(--cherry) !important; }
+
+  .scoreBox{
+    display:none; text-align:center; background:var(--alt); border-radius:12px;
+    padding:16px; margin-top:14px; font-size:1.1rem; font-weight:700; color:var(--navy);
+  }
+
+  /* Tier 3 */
+  .groupTitle{
+    color:var(--cherry); font-weight:800; font-size:.95rem;
+    text-transform:uppercase; letter-spacing:.3px;
+    margin:20px 0 8px; padding-bottom:4px; border-bottom:2px solid #eadcdc;
+  }
+  .readCard{
+    background:var(--card); border-radius:14px; padding:14px 16px;
+    margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+  }
+  .readCard .zh{ font-size:1.25rem; font-weight:700; color:var(--navy); margin-bottom:2px; }
+  .readCard .py{ font-size:.82rem; font-style:italic; color:var(--muted); margin-bottom:10px; }
+  .readBtns{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .readBtns button{
+    border:none; border-radius:20px; padding:7px 14px; font-size:.82rem; cursor:pointer;
+  }
+  .btnListen{ background:var(--navy); color:#fff; }
+  .btnRecord{ background:var(--cherry); color:#fff; }
+  .btnRecord.recording{ background:#5a0009; }
+  .btnPlayback{ background:#555; color:#fff; }
+  .btnPlayback[disabled]{ background:#ccc; cursor:not-allowed; }
+  .recStatus{ font-size:.78rem; color:var(--muted); margin-left:2px; }
+
+  .noteBox{
+    background:#FFF7E6; border:1px solid #f0d9a0; border-radius:10px;
+    padding:10px 12px; font-size:.82rem; color:#8a6d1f; margin-bottom:16px; line-height:1.5;
+  }
+
+  /* Tier 6 - Summary */
+  .overallCard{
+    background:var(--navy); color:#fff; border-radius:16px;
+    padding:22px 18px; text-align:center; margin-bottom:18px;
+  }
+  .overallCard .bigScore{ font-size:2.2rem; font-weight:800; margin:4px 0; }
+  .overallCard .bigLabel{ font-size:.9rem; opacity:.85; }
+  .tierResultCard{
+    background:var(--card); border-radius:14px; padding:14px 16px;
+    margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+    border-left:4px solid var(--navy);
+  }
+  .tierResultCard.notdone{ border-left-color:#ccc; opacity:.7; }
+  .tierResultCard .trHead{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;
+  }
+  .tierResultCard .trLabel{ font-weight:700; color:var(--navy); font-size:.95rem; }
+  .tierResultCard .trScore{ font-weight:800; font-size:1.05rem; }
+  .tierResultCard .barBg{
+    background:#eee; border-radius:8px; height:8px; overflow:hidden; margin-bottom:8px;
+  }
+  .tierResultCard .barFill{ height:100%; border-radius:8px; }
+  .tierResultCard .trAdvice{ font-size:.85rem; color:var(--muted); line-height:1.5; }
+  .tierResultCard .trTag{
+    display:inline-block; font-size:.72rem; font-weight:700; padding:2px 10px;
+    border-radius:12px; margin-bottom:6px;
+  }
+  .priorityBox{
+    background:#FFF0F0; border:1px solid #f0c0c0; border-radius:12px;
+    padding:14px 16px; margin-top:6px; font-size:.9rem; line-height:1.6; color:#7a1a1a;
+  }
+  .priorityBox strong{ color:var(--cherry); }
+
+  footer{ text-align:center; color:var(--muted); font-size:.78rem; padding:20px 16px; }
+
+  @media (max-width:400px){
+    .qword{ font-size:1.2rem; }
+    header h1{ font-size:1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>發音測驗</h1>
+  <div class="sub">Trắc nghiệm phát âm — Thanh mẫu · Vận mẫu · Thanh điệu · Biến điệu · Đọc</div>
+  <nav class="tabs">
+    <button class="tabBtn active" data-tab="tier1">① 聲母韻母聲調<br>Thanh mẫu-Vận mẫu-Thanh điệu</button>
+    <button class="tabBtn" data-tab="tier2">② 變調<br>Biến điệu</button>
+    <button class="tabBtn" data-tab="tier3">③ 詞句短文<br>Từ-Câu-Đoạn văn</button>
+    <button class="tabBtn" data-tab="tier4">④ 理論<br>Lý thuyết</button>
+    <button class="tabBtn" data-tab="tier5">⑤ 綜合應用<br>Thực hành ứng dụng</button>
+    <button class="tabBtn" data-tab="tier6">⑥ 總結報告<br>Kết quả tổng kết</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ===================== TIER 1 ===================== -->
+  <section class="panel active" id="tier1">
+    <div class="intro">Bấm 🔊 để nghe phát âm, sau đó chọn pinyin đúng. Phần này kiểm tra khả năng nhận biết thanh mẫu (phụ âm đầu), vận mẫu (nguyên âm) và thanh điệu.</div>
+    <div id="tier1Questions"></div>
+    <div class="submitBar">
+      <button id="submitTier1">✔ Nộp bài</button>
+      <button class="retryBtn" id="retryTier1" style="display:none;">↺ Làm lại</button>
+    </div>
+    <div class="scoreBox" id="scoreTier1"></div>
+  </section>
+
+  <!-- ===================== TIER 2 ===================== -->
+  <section class="panel" id="tier2">
+    <div class="intro">Chọn cách đọc đúng sau khi áp dụng quy tắc biến điệu (thanh 3 + thanh 3, biến điệu của 不 và 一).</div>
+    <div id="tier2Questions"></div>
+    <div class="submitBar">
+      <button id="submitTier2">✔ Nộp bài</button>
+      <button class="retryBtn" id="retryTier2" style="display:none;">↺ Làm lại</button>
+    </div>
+    <div class="scoreBox" id="scoreTier2"></div>
+  </section>
+
+  <!-- ===================== TIER 3 ===================== -->
+  <section class="panel" id="tier3">
+    <div class="noteBox">Phần này không chấm điểm tự động. Em nghe mẫu 🔊, sau đó bấm ● Ghi âm để đọc lại, rồi bấm ▶ Nghe lại để tự so sánh giọng mình với mẫu.</div>
+    <div id="tier3Content"></div>
+  </section>
+
+  <!-- ===================== TIER 4: LÝ THUYẾT ===================== -->
+  <section class="panel" id="tier4">
+    <div class="intro">Kiểm tra hiểu biết về khái niệm và quy tắc ngữ âm (không cần nghe) — thanh mẫu, vận mẫu, thanh điệu, quy tắc biến điệu.</div>
+    <div id="tier4Questions"></div>
+    <div class="submitBar">
+      <button id="submitTier4">✔ Nộp bài</button>
+      <button class="retryBtn" id="retryTier4" style="display:none;">↺ Làm lại</button>
+    </div>
+    <div class="scoreBox" id="scoreTier4"></div>
+  </section>
+
+  <!-- ===================== TIER 5: THỰC HÀNH ỨNG DỤNG ===================== -->
+  <section class="panel" id="tier5">
+    <div class="intro">Áp dụng quy tắc vào từ/cụm từ MỚI (chưa xuất hiện ở các phần trước) — kiểm tra khả năng vận dụng thực sự, không chỉ ghi nhớ.</div>
+    <div id="tier5Questions"></div>
+    <div class="submitBar">
+      <button id="submitTier5">✔ Nộp bài</button>
+      <button class="retryBtn" id="retryTier5" style="display:none;">↺ Làm lại</button>
+    </div>
+    <div class="scoreBox" id="scoreTier5"></div>
+  </section>
+  <!-- ===================== TIER 6: TỔNG KẾT ===================== -->
+  <section class="panel" id="tier6">
+    <div id="summaryContent"></div>
+  </section>
+
+</main>
+
+<footer>中山工商 華語文班 · 發音測驗</footer>
+
+<script>
+/* ============ SPEECH SYNTHESIS ============ */
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-TW';
+  u.rate = 0.8;
+  window.speechSynthesis.speak(u);
+}
+
+/* ============ TAB NAVIGATION ============ */
+document.querySelectorAll('.tabBtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tabBtn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ============ TIER 1 DATA: 聲母韻母聲調 ============ */
+const tier1Data = [
+  { word:"十", vi:"số mười", options:["shí","sì","shì","sí"], correct:0 },
+  { word:"四", vi:"số bốn", options:["sì","shì","sí","xì"], correct:0 },
+  { word:"好", vi:"tốt, đẹp", options:["hǎo","háo","hào","hāo"], correct:0 },
+  { word:"女", vi:"nữ, con gái", options:["nǚ","nǔ","lǚ","nú"], correct:0 },
+  { word:"綠", vi:"màu xanh lá", options:["lǜ","nǜ","lù","lǚ"], correct:0 },
+  { word:"三", vi:"số ba", options:["sān","shān","sāng","shāng"], correct:0 },
+  { word:"上", vi:"trên, lên", options:["shàng","sàng","shǎng","sāng"], correct:0 },
+  { word:"熱", vi:"nóng", options:["rè","lè","gè","zè"], correct:0 },
+  { word:"婆", vi:"bà (trong 婆婆: bà nội/ngoại chồng)", options:["pó","bó","pō","bò"], correct:0 },
+  { word:"謝", vi:"cảm ơn (trong 謝謝)", options:["xiè","xié","xiě","xiē"], correct:0 },
+  { word:"知", vi:"biết (trong 知道)", options:["zhī","zī","chī","cí"], correct:0 },
+  { word:"資", vi:"tư liệu (trong 資訊)", options:["zī","zhī","cí","sī"], correct:0 },
+  { word:"春", vi:"mùa xuân", options:["chūn","cūn","chōng","cōng"], correct:0 },
+  { word:"心", vi:"trái tim, tâm", options:["xīn","xīng","xún","qīn"], correct:0 },
+  { word:"天", vi:"trời, ngày", options:["tiān","tān","qiān","tán"], correct:0 },
+  { word:"眼", vi:"mắt", options:["yǎn","yǎng","yán","yàn"], correct:0 },
+  { word:"蟲", vi:"con sâu, côn trùng", options:["chóng","cóng","chéng","zhóng"], correct:0 },
+  { word:"冬", vi:"mùa đông", options:["dōng","dēng","tōng","dòng"], correct:0 },
+  { word:"遠", vi:"xa", options:["yuǎn","yǔ","yán","wǎn"], correct:0 },
+  { word:"用", vi:"dùng, sử dụng", options:["yòng","yǒng","róng","yǔ"], correct:0 },
+];
+
+/* ============ TIER 2 DATA: 變調 ============ */
+const tier2Data = [
+  { word:"你好", vi:"Xin chào", options:["nǐ hǎo","ní hǎo","nì hǎo","ni hao"], correct:1, note:"Thanh 3 + Thanh 3 → chữ trước đổi thành Thanh 2" },
+  { word:"很好", vi:"Rất tốt", options:["hěn hǎo","hén hǎo","hèn hǎo","hen hao"], correct:1, note:"Thanh 3 + Thanh 3 → chữ trước đổi thành Thanh 2" },
+  { word:"不是", vi:"Không phải", options:["bù shì","bú shì","bǔ shì","bu shi"], correct:1, note:"不 + Thanh 4 → 不 đổi thành Thanh 2 (bú)" },
+  { word:"不來", vi:"Không đến", options:["bù lái","bú lái","bǔ lái","bu lai"], correct:0, note:"不 + Thanh 2 → 不 giữ nguyên Thanh 4 (bù)" },
+  { word:"一天", vi:"Một ngày", options:["yī tiān","yì tiān","yí tiān","yǐ tiān"], correct:1, note:"一 + Thanh 1 → 一 đổi thành Thanh 4 (yì)" },
+  { word:"一定", vi:"Nhất định", options:["yī dìng","yì dìng","yí dìng","yǐ dìng"], correct:2, note:"一 + Thanh 4 → 一 đổi thành Thanh 2 (yí)" },
+  { word:"打狗", vi:"đánh chó", options:["dǎ gǒu","dá gǒu","dà gǒu","da gou"], correct:1, note:"Thanh 3 + Thanh 3 → chữ trước đổi thành Thanh 2" },
+  { word:"老虎", vi:"con hổ", options:["lǎo hǔ","láo hǔ","lào hǔ","lao hu"], correct:1, note:"Thanh 3 + Thanh 3 → chữ trước đổi thành Thanh 2" },
+  { word:"水果", vi:"trái cây", options:["shuǐ guǒ","shuí guǒ","shuì guǒ","shui guo"], correct:1, note:"Thanh 3 + Thanh 3 → chữ trước đổi thành Thanh 2" },
+  { word:"小姐", vi:"cô, tiểu thư", options:["xiǎo jiě","xiáo jiě","xiào jiě","xiao jie"], correct:1, note:"Thanh 3 + Thanh 3 → chữ trước đổi thành Thanh 2" },
+  { word:"不對", vi:"không đúng", options:["bù duì","bú duì","bǔ duì","bu dui"], correct:1, note:"不 + Thanh 4 → 不 đổi thành Thanh 2 (bú)" },
+  { word:"不忙", vi:"không bận", options:["bù máng","bú máng","bǔ máng","bu mang"], correct:0, note:"不 + Thanh 2 → 不 giữ nguyên Thanh 4 (bù)" },
+  { word:"不吃", vi:"không ăn", options:["bù chī","bú chī","bǔ chī","bu chi"], correct:0, note:"不 + Thanh 1 → 不 giữ nguyên Thanh 4 (bù)" },
+  { word:"不好", vi:"không tốt", options:["bù hǎo","bú hǎo","bǔ hǎo","bu hao"], correct:0, note:"不 chỉ đổi thanh trước Thanh 4 — trước Thanh 3 vẫn giữ nguyên bù" },
+  { word:"一個", vi:"một cái", options:["yī ge","yì ge","yí ge","yǐ ge"], correct:2, note:"個 vốn là Thanh 4 (gè) → 一 đổi thành Thanh 2 (yí)" },
+  { word:"一年", vi:"một năm", options:["yī nián","yì nián","yí nián","yǐ nián"], correct:1, note:"一 + Thanh 2 → 一 đổi thành Thanh 4 (yì)" },
+  { word:"一種", vi:"một loại", options:["yī zhǒng","yì zhǒng","yí zhǒng","yǐ zhǒng"], correct:1, note:"一 + Thanh 3 → 一 đổi thành Thanh 4 (yì)" },
+  { word:"一片", vi:"một mảnh", options:["yī piàn","yì piàn","yí piàn","yǐ piàn"], correct:2, note:"一 + Thanh 4 → 一 đổi thành Thanh 2 (yí)" },
+  { word:"謝謝", vi:"cảm ơn", options:["xiè xiè","xièxie","xié xie","xiè xié"], correct:1, note:"Chữ thứ 2 đọc nhẹ (khinh thanh) — viết liền không có dấu" },
+  { word:"我們", vi:"chúng tôi", options:["wǒ mén","wǒmen","wó men","wò men"], correct:1, note:"們 là khinh thanh (thanh nhẹ), 我 giữ nguyên Thanh 3" },
+];
+
+/* ============ TIER 4 DATA: 理論 Lý thuyết ============ */
+const tier4Data = [
+  { word:"普通話有幾個基本聲調？", py:"Pǔtōnghuà yǒu jǐ ge jīběn shēngdiào?", vi:"Tiếng Phổ thông có bao nhiêu thanh điệu cơ bản?",
+    options:["3個","4個","5個","6個"], correct:1 },
+  { word:"「聲母」是指字音開頭的哪個部分？", py:"“Shēngmǔ” shì zhǐ zìyīn kāitóu de nǎge bùfen?", vi:"\"Thanh mẫu\" là chỉ phần nào ở đầu âm tiết?",
+    options:["輔音（phụ âm）","母音（nguyên âm）","整個字的聲調（thanh điệu cả chữ）","字的意思（nghĩa của chữ）"], correct:0 },
+  { word:"「韻母」是指字音的哪個部分？", py:"“Yùnmǔ” shì zhǐ zìyīn de nǎge bùfen?", vi:"\"Vận mẫu\" là chỉ phần nào của âm tiết?",
+    options:["開頭輔音（phụ âm đầu）","母音（nguyên âm）部分","聲調符號（ký hiệu thanh điệu）","輕聲（thanh nhẹ）"], correct:1 },
+  { word:"zh、ch、sh 屬於哪一類聲母？", py:"zh, ch, sh shǔyú nǎ yí lèi shēngmǔ?", vi:"zh, ch, sh thuộc loại thanh mẫu nào?",
+    options:["捲舌音（âm uốn lưỡi）","唇音（âm môi）","鼻音（âm mũi）","舌根音（âm gốc lưỡi）"], correct:0 },
+  { word:"z、c、s 與 zh、ch、sh 最主要的差別是？", py:"z, c, s yǔ zh, ch, sh zuì zhǔyào de chābié shì?", vi:"Khác biệt chính giữa z/c/s và zh/ch/sh là gì?",
+    options:["捲舌與不捲舌（uốn lưỡi hay không）","聲調不同（khác thanh điệu）","音長不同（khác độ dài âm）","沒有差別（không khác gì）"], correct:0 },
+  { word:"第三聲＋第三聲相連時，前一個字的聲調會變成？", py:"Dì-sān shēng jiā dì-sān shēng xiānglián shí, qián yí ge zì de shēngdiào huì biànchéng?", vi:"Khi Thanh 3 + Thanh 3 đứng liền nhau, chữ trước đổi thành thanh mấy?",
+    options:["第一聲（Thanh 1）","第二聲（Thanh 2）","輕聲（Thanh nhẹ）","不變（Không đổi）"], correct:1 },
+  { word:"「不」在第四聲字前面時，讀音會變成？", py:"“Bù” zài dì-sì shēng zì qiánmiàn shí, dúyīn huì biànchéng?", vi:"\"不\" đứng trước chữ Thanh 4 thì đọc thành gì?",
+    options:["bú（第二聲）","bù（không đổi）","bǔ（第三聲）","輕聲（thanh nhẹ）"], correct:0 },
+  { word:"「一」單獨使用或作為序數詞時，讀作？", py:"“Yī” dāndú shǐyòng huò zuòwéi xùshùcí shí, dú zuò?", vi:"\"一\" khi dùng riêng lẻ hoặc làm số thứ tự thì đọc là gì?",
+    options:["yī（第一聲，không đổi）","yì（第四聲）","yí（第二聲）","yǐ（第三聲）"], correct:0 },
+  { word:"ü 這個母音出現在哪些聲母後面時，上面兩點會省略不寫？", py:"ü zhège mǔyīn chūxiàn zài nǎxiē shēngmǔ hòumiàn shí, shàngmiàn liǎng diǎn huì shěnglüè bù xiě?", vi:"Nguyên âm ü đứng sau những thanh mẫu nào thì bỏ 2 dấu chấm ở trên?",
+    options:["j、q、x、y","b、p、m、f","zh、ch、sh","z、c、s"], correct:0 },
+  { word:"輕聲（中性調）的發音特點是？", py:"Qīngshēng (zhōngxìngdiào) de fāyīn tèdiǎn shì?", vi:"Đặc điểm phát âm của khinh thanh (thanh nhẹ) là gì?",
+    options:["又短又輕，沒有明顯聲調（ngắn và nhẹ, không rõ thanh điệu）","特別長（rất dài）","特別高（rất cao）","特別重（rất nặng）"], correct:0 },
+  { word:"漢語拼音四個聲調中，第一聲的調值（音高走勢）是？", py:"Hànyǔ pīnyīn sì ge shēngdiào zhōng, dì-yī shēng de diàozhí shì?", vi:"Trong 4 thanh điệu của pinyin, đường nét cao độ của Thanh 1 là gì?",
+    options:["高平（55，giữ cao đều）","由中升到高（35，đi lên）","先降後升（214，xuống rồi lên）","由高降到低（51，đi xuống）"], correct:0 },
+  { word:"第二聲的調值走勢是？", py:"Dì-èr shēng de diàozhí zǒushì shì?", vi:"Đường nét cao độ của Thanh 2 là gì?",
+    options:["高平（55，cao đều）","由中升到高（35，đi lên）","先降後升（214，xuống rồi lên）","由高降到低（51，đi xuống）"], correct:1 },
+  { word:"第三聲的調值走勢是？", py:"Dì-sān shēng de diàozhí zǒushì shì?", vi:"Đường nét cao độ của Thanh 3 là gì?",
+    options:["高平（55，cao đều）","由中升到高（35，đi lên）","先降後升（214，xuống rồi lên）","由高降到低（51，đi xuống）"], correct:2 },
+  { word:"第四聲的調值走勢是？", py:"Dì-sì shēng de diàozhí zǒushì shì?", vi:"Đường nét cao độ của Thanh 4 là gì?",
+    options:["高平（55，cao đều）","由中升到高（35，đi lên）","先降後升（214，xuống rồi lên）","由高降到低（51，đi xuống）"], correct:3 },
+  { word:"零聲母（沒有聲母）的音節，例如「愛」（ài），聲母部分是？", py:"Líng shēngmǔ de yīnjié, lìrú “ài”, shēngmǔ bùfen shì?", vi:"Âm tiết không có thanh mẫu, ví dụ \"ài\", phần thanh mẫu là gì?",
+    options:["沒有聲母，直接以母音開頭（không có thanh mẫu）","以 y 開頭（bắt đầu bằng y）","以 w 開頭（bắt đầu bằng w）","以 h 開頭（bắt đầu bằng h）"], correct:0 },
+  { word:"拼音書寫規則中，ü 前面沒有 j/q/x/y 時（如接在 n、l 後面），需要如何書寫？", py:"Pīnyīn shūxiě guīzé zhōng, ü qiánmiàn méiyǒu j/q/x/y shí, xūyào rúhé shūxiě?", vi:"Khi ü không đứng sau j/q/x/y (ví dụ sau n, l) thì viết như thế nào?",
+    options:["保留兩點寫成 ü（giữ nguyên 2 chấm）","省略兩點寫成 u（bỏ 2 chấm viết thành u）","改寫成 v（đổi thành v）","改寫成 yu（đổi thành yu）"], correct:0 },
+  { word:"「儿化」（如 一點兒、玩兒）主要出現在哪個地區的口語中？", py:"“Érhuà” zhǔyào chūxiàn zài nǎge dìqū de kǒuyǔ zhōng?", vi:"\"Nhi hóa\" (như 一點兒, 玩兒) chủ yếu xuất hiện trong khẩu ngữ vùng nào?",
+    options:["北方話，尤其北京話（tiếng phương Bắc, đặc biệt Bắc Kinh）","南方話（tiếng phương Nam）","台灣的華語（tiếng Hoa ở Đài Loan）","所有中文使用地區（mọi nơi dùng tiếng Trung）"], correct:0 },
+  { word:"音節結構的基本公式是？", py:"Yīnjié jiégòu de jīběn gōngshì shì?", vi:"Công thức cấu trúc cơ bản của một âm tiết là gì?",
+    options:["聲母＋韻母＋聲調（thanh mẫu+vận mẫu+thanh điệu）","聲調＋聲母＋韻母","韻母＋聲母＋聲調","只有聲母和韻母，沒有聲調（không có thanh điệu）"], correct:0 },
+  { word:"「不」和「一」的變調規則，主要是根據後面字的什麼來決定？", py:"“Bù” hé “yī” de biàndiào guīzé, zhǔyào gēnjù hòumiàn zì de shénme lái juédìng?", vi:"Quy tắc biến điệu của \"不\" và \"一\" chủ yếu dựa vào điều gì của chữ phía sau?",
+    options:["後面字的聲調（thanh điệu của chữ sau）","後面字的聲母（thanh mẫu của chữ sau）","後面字的韻母（vận mẫu của chữ sau）","整句話的長度（độ dài cả câu）"], correct:0 },
+  { word:"三個第三聲連在一起時（如「我很好」），常見的唸法規則是？", py:"Sān ge dì-sān shēng lián zài yìqǐ shí, chángjiàn de niànfǎ guīzé shì?", vi:"Khi 3 Thanh 3 liền nhau (như \"我很好\"), quy tắc đọc phổ biến là gì?",
+    options:["前面的字都變成第二聲，只有最後一個維持第三聲（các chữ trước đổi Thanh 2, chữ cuối giữ Thanh 3）","全部都維持第三聲不變（tất cả giữ Thanh 3）","全部都變成第二聲（tất cả đổi Thanh 2）","只有第一個字變第二聲，其餘不變（chỉ chữ đầu đổi Thanh 2）"], correct:0 },
+];
+
+/* ============ TIER 5 DATA: 綜合應用 Thực hành ứng dụng (từ/cụm từ MỚI) ============ */
+const tier5Data = [
+  { word:"打傘（dǎ + sǎn，皆第三聲）", vi:"che ô, che dù", options:["dǎ sǎn","dá sǎn","dà sǎn","da san"], correct:1 },
+  { word:"不對（bù + duì，第四聲）", vi:"không đúng", options:["bù duì","bú duì","bǔ duì","bu dui"], correct:1 },
+  { word:"不忙（bù + máng，第二聲）", vi:"không bận", options:["bù máng","bú máng","bǔ máng","bu mang"], correct:0 },
+  { word:"一起（yī + qǐ，第三聲）", vi:"cùng nhau", options:["yī qǐ","yì qǐ","yí qǐ","yǐ qǐ"], correct:1 },
+  { word:"一樣（yī + yàng，第四聲）", vi:"giống nhau", options:["yī yàng","yì yàng","yí yàng","yǐ yàng"], correct:2 },
+  { word:"旅（新字，測試 ü）", vi:"đi du lịch (trong 旅遊)", options:["lǚ","lǔ","nǚ","lù"], correct:0 },
+  { word:"找（新字，測試捲舌音）", vi:"tìm kiếm", options:["zhǎo","zǎo","cháo","sǎo"], correct:0 },
+  { word:"冷（新字，測試 -n 收尾）", vi:"lạnh", options:["lěng","léng","lěn","něng"], correct:0 },
+  { word:"很忙（hěn + máng，第三聲＋第二聲，不需變調）", vi:"rất bận", options:["hěn máng","hén máng","hèn máng","hen mang"], correct:0 },
+  { word:"想找（xiǎng + zhǎo，皆第三聲）", vi:"muốn tìm", options:["xiǎng zhǎo","xiáng zhǎo","xiàng zhǎo","xiang zhao"], correct:1 },
+  { word:"洗澡（xǐ + zǎo，皆第三聲）", vi:"tắm rửa", options:["xǐ zǎo","xí zǎo","xì zǎo","xi zao"], correct:1 },
+  { word:"男（新字，測試 n）", vi:"nam giới", options:["nán","lán","náng","láng"], correct:0 },
+  { word:"蘭（新字，測試 l）", vi:"hoa lan", options:["lán","nán","láng","náng"], correct:0 },
+  { word:"讓（新字，測試 r 與 -ang）", vi:"nhường, để cho", options:["ràng","làng","réng","lèng"], correct:0 },
+  { word:"蛇（新字，測試 sh）", vi:"con rắn", options:["shé","sé","xié","ché"], correct:0 },
+  { word:"雲（新字，測試 y 與 ün）", vi:"mây", options:["yún","yǔn","rún","wén"], correct:0 },
+  { word:"拳（新字，測試 q 與 uan）", vi:"nắm đấm", options:["quán","chuán","xuán","quǎn"], correct:0 },
+  { word:"熊（新字，測試 x 與 iong）", vi:"con gấu", options:["xióng","qióng","xiōng","chóng"], correct:0 },
+  { word:"醫生（yīshēng，兩字皆維持原本聲調，不輕讀）", vi:"bác sĩ", options:["yīshēng","yìshēng","yíshēng","yīsheng（輕聲）"], correct:0 },
+  { word:"謝謝你（xièxie + nǐ，謝謝第二字輕聲）", vi:"cảm ơn bạn", options:["xièxiè nǐ","xièxie nǐ","xié xie nǐ","xiè xie ní"], correct:1 },
+];
+
+
+const tier3Data = {
+  "詞語 · Từ": [
+    { zh:"你好", py:"nǐ hǎo" },
+    { zh:"謝謝", py:"xièxie" },
+    { zh:"老師", py:"lǎoshī" },
+    { zh:"學生", py:"xuéshēng" },
+    { zh:"中文", py:"Zhōngwén" },
+    { zh:"學校", py:"xuéxiào" },
+  ],
+  "短語 · Cụm từ": [
+    { zh:"我是學生", py:"wǒ shì xuéshēng" },
+    { zh:"你叫什麼名字", py:"nǐ jiào shénme míngzì" },
+    { zh:"中山工商", py:"Zhōngshān Gōngshāng" },
+    { zh:"電子資訊", py:"diànzǐ zīxùn" },
+    { zh:"認識你很高興", py:"rènshi nǐ hěn gāoxìng" },
+    { zh:"台灣高雄", py:"Táiwān Gāoxióng" },
+  ],
+  "句子 · Câu": [
+    { zh:"我今年十八歲。", py:"Wǒ jīnnián shíbā suì。" },
+    { zh:"我喜歡吃河粉。", py:"Wǒ xǐhuān chī héfěn。" },
+    { zh:"你今天心情怎麼樣？", py:"Nǐ jīntiān xīnqíng zěnmeyàng?" },
+    { zh:"我家有五個人。", py:"Wǒ jiā yǒu wǔ ge rén。" },
+    { zh:"我週末喜歡打籃球。", py:"Wǒ zhōumò xǐhuān dǎ lánqiú。" },
+  ],
+  "短文 · Đoạn văn": [
+    { zh:"大家好，我叫小明。我今年十八歲，我從越南來台灣學中文。我喜歡打籃球和聽音樂。很高興認識大家！",
+      py:"Dàjiā hǎo, wǒ jiào Xiǎomíng. Wǒ jīnnián shíbā suì, wǒ cóng Yuènán lái Táiwān xué Zhōngwén. Wǒ xǐhuān dǎ lánqiú hé tīng yīnyuè. Hěn gāoxìng rènshi dàjiā!" },
+    { zh:"我家有五個人：爸爸、媽媽、哥哥、姐姐和我。我們住在河內。我很喜歡我的家人。",
+      py:"Wǒ jiā yǒu wǔ ge rén: bàba, māma, gēge, jiějie hé wǒ. Wǒmen zhù zài Hénèi. Wǒ hěn xǐhuān wǒ de jiārén." },
+    { zh:"中山工商是一所高職。我在這裡學電子和資訊，也學中文。老師很親切，同學也很友善。我很喜歡這裡的生活。",
+      py:"Zhōngshān Gōngshāng shì yì suǒ gāozhí. Wǒ zài zhèlǐ xué diànzǐ hé zīxùn, yě xué Zhōngwén. Lǎoshī hěn qīnqiè, tóngxué yě hěn yǒushàn. Wǒ hěn xǐhuān zhèlǐ de shēnghuó." },
+  ],
+};
+
+/* ============ TIER INFO for summary ============ */
+const tierInfo = {
+  tier1: { label:"① 聲母韻母聲調 · Thanh mẫu - Vận mẫu - Thanh điệu",
+    advice:"Luyện lại các cặp âm dễ nhầm: zh/ch/sh với z/c/s, r với l, âm ü, vận mẫu -n với -ng, và cách phân biệt rõ 4 thanh điệu cơ bản." },
+  tier2: { label:"② 變調 · Biến điệu",
+    advice:"Ôn lại 3 quy tắc biến điệu: Thanh 3 + Thanh 3 (đổi thành Thanh 2), quy tắc của 不 (chỉ đổi trước Thanh 4), và quy tắc của 一 (đổi tùy theo thanh của chữ sau)." },
+  tier4: { label:"④ 理論 · Lý thuyết",
+    advice:"Xem lại các khái niệm nền tảng: thanh mẫu/vận mẫu là gì, điệu trị của 4 thanh (55/35/214/51), quy tắc viết ü, cấu trúc một âm tiết (thanh mẫu+vận mẫu+thanh điệu)." },
+  tier5: { label:"⑤ 綜合應用 · Ứng dụng thực hành",
+    advice:"Luyện tập áp dụng quy tắc vào từ mới chưa gặp — đừng chỉ học thuộc câu trả lời, hãy tập tự suy luận quy tắc cho từ lạ." },
+};
+const testScores = { tier1:null, tier2:null, tier4:null, tier5:null };
+
+function classify(pct){
+  if(pct >= 85) return { tag:"Xuất sắc", color:"#1e7e34", bg:"#e7f6ea" };
+  if(pct >= 70) return { tag:"Khá tốt", color:"#1F4E78", bg:"#EAF1F8" };
+  if(pct >= 50) return { tag:"Cần ôn thêm", color:"#b8860b", bg:"#FFF7E6" };
+  return { tag:"Cần ôn tập nhiều", color:"#c0392b", bg:"#fbeaea" };
+}
+
+function renderSummary(){
+  const box = document.getElementById('summaryContent');
+  const keys = Object.keys(tierInfo);
+  const done = keys.filter(k => testScores[k] !== null);
+
+  let html = '';
+
+  if(done.length === 0){
+    html += `<div class="intro">Em hãy hoàn thành phần ①②④⑤ (nộp bài) để xem báo cáo tổng kết và gợi ý ôn tập ở đây nhé. (Phần ③ là luyện đọc tự do, không tính điểm.)</div>`;
+    box.innerHTML = html;
+    return;
+  }
+
+  const totalScore = done.reduce((s,k)=> s + testScores[k].score, 0);
+  const totalMax = done.reduce((s,k)=> s + testScores[k].total, 0);
+  const totalPct = Math.round((totalScore/totalMax)*100);
+
+  html += `
+    <div class="overallCard">
+      <div class="bigLabel">Tổng điểm (${done.length}/4 phần đã làm)</div>
+      <div class="bigScore">${totalScore} / ${totalMax}</div>
+      <div class="bigLabel">${totalPct}%</div>
+    </div>
+  `;
+
+  // per-tier breakdown
+  keys.forEach(k=>{
+    const info = tierInfo[k];
+    if(testScores[k] === null){
+      html += `
+        <div class="tierResultCard notdone">
+          <div class="trHead">
+            <span class="trLabel">${info.label}</span>
+            <span class="trScore" style="color:#999;">Chưa làm</span>
+          </div>
+          <div class="trAdvice">Em chưa hoàn thành phần này.</div>
+        </div>
+      `;
+      return;
+    }
+    const { score, total } = testScores[k];
+    const pct = Math.round((score/total)*100);
+    const cls = classify(pct);
+    html += `
+      <div class="tierResultCard" style="border-left-color:${cls.color};">
+        <div class="trHead">
+          <span class="trLabel">${info.label}</span>
+          <span class="trScore" style="color:${cls.color};">${score}/${total}</span>
+        </div>
+        <span class="trTag" style="background:${cls.bg};color:${cls.color};">${cls.tag} · ${pct}%</span>
+        <div class="barBg"><div class="barFill" style="width:${pct}%;background:${cls.color};"></div></div>
+        <div class="trAdvice">${info.advice}</div>
+      </div>
+    `;
+  });
+
+  // priority recommendation — weakest areas among completed tiers
+  if(done.length > 0){
+    const ranked = done
+      .map(k => ({ k, pct: Math.round((testScores[k].score/testScores[k].total)*100) }))
+      .sort((a,b)=> a.pct - b.pct);
+    const weakest = ranked.filter(r => r.pct < 70).slice(0,2);
+    if(weakest.length > 0){
+      html += `<div class="priorityBox"><strong>📌 Ưu tiên ôn tập:</strong><br>` +
+        weakest.map((r,i)=> `${i+1}. ${tierInfo[r.k].label} (${r.pct}%)`).join('<br>') +
+        `</div>`;
+    } else {
+      html += `<div class="priorityBox" style="background:#e7f6ea;border-color:#bfe3c8;color:#1e7e34;"><strong>🎉 Rất tốt!</strong><br>Tất cả các phần đã làm đều đạt từ 70% trở lên. Em có thể tiếp tục luyện phần ③ Đọc để nâng cao thêm.</div>`;
+    }
+  }
+
+  box.innerHTML = html;
+}
+
+/* ============ RENDER MCQ (tier1 / tier2 / tier4 / tier5) ============ */
+function renderMCQ(containerId, data, stateArr){
+  const container = document.getElementById(containerId);
+  data.forEach((q, idx) => {
+    stateArr.push(null);
+    const card = document.createElement('div');
+    card.className = 'qcard';
+    card.dataset.idx = idx;
+
+    const isLong = q.word.length > 8;
+    const singleCol = isLong || q.options.some(o => o.length > 6);
+    const optsHtml = q.options.map((opt, oi) => `<div class="opt" data-oi="${oi}">${opt}</div>`).join('');
+    const pyHtml = q.py ? `<div class="qpy">${q.py}</div>` : '';
+    const viHtml = q.vi ? `<div class="qvi">${q.vi}</div>` : '';
+
+    card.innerHTML = `
+      <div class="qhead">
+        <span class="qnum">${idx+1}</span>
+        <span class="qword${isLong ? ' long' : ''}">${q.word}</span>
+        <button class="playbtn" data-speak="${q.word}">🔊 Nghe</button>
+      </div>
+      ${pyHtml}
+      ${viHtml}
+      <div class="options${singleCol ? ' single' : ''}">${optsHtml}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+const tier1State = [];
+const tier2State = [];
+const tier4State = [];
+const tier5State = [];
+renderMCQ('tier1Questions', tier1Data, tier1State);
+renderMCQ('tier2Questions', tier2Data, tier2State);
+renderMCQ('tier4Questions', tier4Data, tier4State);
+renderMCQ('tier5Questions', tier5Data, tier5State);
+
+/* click handlers: play + option select */
+document.addEventListener('click', (e)=>{
+  const playBtn = e.target.closest('.playbtn');
+  if(playBtn){ speak(playBtn.dataset.speak); return; }
+
+  const opt = e.target.closest('.opt');
+  if(opt){
+    const card = opt.closest('.qcard');
+    if(card.classList.contains('locked')) return;
+    card.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+    opt.classList.add('selected');
+    const panel = card.closest('.panel').id;
+    const idx = parseInt(card.dataset.idx);
+    const oi = parseInt(opt.dataset.oi);
+    if(panel === 'tier1') tier1State[idx] = oi;
+    if(panel === 'tier2') tier2State[idx] = oi;
+    if(panel === 'tier4') tier4State[idx] = oi;
+    if(panel === 'tier5') tier5State[idx] = oi;
+  }
+});
+
+/* submit logic */
+function submitTier(containerId, data, stateArr, scoreBoxId, submitBtnId, retryBtnId, tierKey){
+  const container = document.getElementById(containerId);
+  let score = 0;
+  container.querySelectorAll('.qcard').forEach((card, idx)=>{
+    card.classList.add('locked');
+    const correctIdx = data[idx].correct;
+    const selectedIdx = stateArr[idx];
+    card.querySelectorAll('.opt').forEach((o, oi)=>{
+      if(oi === correctIdx) o.classList.add('correct');
+      else if(oi === selectedIdx) o.classList.add('wrong');
+    });
+    if(selectedIdx === correctIdx) score++;
+  });
+  const scoreBox = document.getElementById(scoreBoxId);
+  scoreBox.style.display = 'block';
+  scoreBox.innerHTML = `Kết quả: ${score} / ${data.length} câu đúng`;
+  document.getElementById(submitBtnId).style.display = 'none';
+  document.getElementById(retryBtnId).style.display = 'block';
+  if(tierKey){
+    testScores[tierKey] = { score, total: data.length };
+    renderSummary();
+  }
+}
+
+function retryTier(containerId, data, stateArr, scoreBoxId, submitBtnId, retryBtnId, tierKey){
+  const container = document.getElementById(containerId);
+  container.querySelectorAll('.qcard').forEach((card, idx)=>{
+    card.classList.remove('locked');
+    card.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    stateArr[idx] = null;
+  });
+  document.getElementById(scoreBoxId).style.display = 'none';
+  document.getElementById(submitBtnId).style.display = 'block';
+  document.getElementById(retryBtnId).style.display = 'none';
+  if(tierKey){
+    testScores[tierKey] = null;
+    renderSummary();
+  }
+}
+
+document.getElementById('submitTier1').addEventListener('click', ()=>{
+  submitTier('tier1Questions', tier1Data, tier1State, 'scoreTier1', 'submitTier1', 'retryTier1', 'tier1');
+});
+document.getElementById('retryTier1').addEventListener('click', ()=>{
+  retryTier('tier1Questions', tier1Data, tier1State, 'scoreTier1', 'submitTier1', 'retryTier1', 'tier1');
+});
+document.getElementById('submitTier2').addEventListener('click', ()=>{
+  submitTier('tier2Questions', tier2Data, tier2State, 'scoreTier2', 'submitTier2', 'retryTier2', 'tier2');
+});
+document.getElementById('retryTier2').addEventListener('click', ()=>{
+  retryTier('tier2Questions', tier2Data, tier2State, 'scoreTier2', 'submitTier2', 'retryTier2', 'tier2');
+});
+document.getElementById('submitTier4').addEventListener('click', ()=>{
+  submitTier('tier4Questions', tier4Data, tier4State, 'scoreTier4', 'submitTier4', 'retryTier4', 'tier4');
+});
+document.getElementById('retryTier4').addEventListener('click', ()=>{
+  retryTier('tier4Questions', tier4Data, tier4State, 'scoreTier4', 'submitTier4', 'retryTier4', 'tier4');
+});
+document.getElementById('submitTier5').addEventListener('click', ()=>{
+  submitTier('tier5Questions', tier5Data, tier5State, 'scoreTier5', 'submitTier5', 'retryTier5', 'tier5');
+});
+document.getElementById('retryTier5').addEventListener('click', ()=>{
+  retryTier('tier5Questions', tier5Data, tier5State, 'scoreTier5', 'submitTier5', 'retryTier5', 'tier5');
+});
+
+/* refresh summary whenever the summary tab is opened */
+document.querySelector('[data-tab="tier6"]').addEventListener('click', renderSummary);
+renderSummary();
+
+/* ============ TIER 3: reading practice with record/playback ============ */
+const tier3Container = document.getElementById('tier3Content');
+let recCounter = 0;
+
+Object.entries(tier3Data).forEach(([groupName, items])=>{
+  const groupTitle = document.createElement('div');
+  groupTitle.className = 'groupTitle';
+  groupTitle.textContent = groupName;
+  tier3Container.appendChild(groupTitle);
+
+  items.forEach(item=>{
+    recCounter++;
+    const id = 'rec' + recCounter;
+    const card = document.createElement('div');
+    card.className = 'readCard';
+    card.innerHTML = `
+      <div class="zh">${item.zh}</div>
+      <div class="py">${item.py}</div>
+      <div class="readBtns">
+        <button class="btnListen" data-speak="${item.zh}">🔊 Nghe mẫu</button>
+        <button class="btnRecord" data-rec="${id}">● Ghi âm</button>
+        <button class="btnPlayback" data-play="${id}" disabled>▶ Nghe lại</button>
+        <span class="recStatus" id="status_${id}"></span>
+      </div>
+    `;
+    tier3Container.appendChild(card);
+  });
+});
+
+/* recording logic using MediaRecorder */
+const recordings = {}; // id -> {mediaRecorder, chunks, audioURL}
+let activeRecId = null;
+
+async function toggleRecord(id, btn){
+  if(!navigator.mediaDevices || !window.MediaRecorder){
+    document.getElementById('status_'+id).textContent = 'Trình duyệt không hỗ trợ ghi âm';
+    return;
+  }
+  if(activeRecId && activeRecId !== id) return; // only one recording at a time
+
+  if(!recordings[id] || !recordings[id].isRecording){
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+      const mr = new MediaRecorder(stream);
+      const chunks = [];
+      mr.ondataavailable = e => chunks.push(e.data);
+      mr.onstop = () => {
+        const blob = new Blob(chunks, { type:'audio/webm' });
+        recordings[id].url = URL.createObjectURL(blob);
+        recordings[id].isRecording = false;
+        document.getElementById('status_'+id).textContent = 'Đã ghi xong ✓';
+        document.querySelector(`[data-play="${id}"]`).disabled = false;
+        stream.getTracks().forEach(t=>t.stop());
+        activeRecId = null;
+      };
+      recordings[id] = { mediaRecorder: mr, chunks, isRecording:true, url:null };
+      mr.start();
+      activeRecId = id;
+      btn.classList.add('recording');
+      btn.textContent = '■ Dừng';
+      document.getElementById('status_'+id).textContent = 'Đang ghi âm...';
+    }catch(err){
+      document.getElementById('status_'+id).textContent = 'Không thể truy cập micro';
+    }
+  } else {
+    recordings[id].mediaRecorder.stop();
+    btn.classList.remove('recording');
+    btn.textContent = '● Ghi âm';
+  }
+}
+
+document.addEventListener('click', (e)=>{
+  const listenBtn = e.target.closest('.btnListen');
+  if(listenBtn){ speak(listenBtn.dataset.speak); return; }
+
+  const recBtn = e.target.closest('.btnRecord');
+  if(recBtn){ toggleRecord(recBtn.dataset.rec, recBtn); return; }
+
+  const playBtn = e.target.closest('.btnPlayback');
+  if(playBtn && !playBtn.disabled){
+    const id = playBtn.dataset.play;
+    if(recordings[id] && recordings[id].url){
+      const audio = new Audio(recordings[id].url);
+      audio.play();
+    }
+  }
+});
+</script>
+
+</body>
+</html>
